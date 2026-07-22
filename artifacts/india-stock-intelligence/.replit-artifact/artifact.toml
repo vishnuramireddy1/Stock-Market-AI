@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "India Stock Intelligence"
+version = "1.0.0"
+id = "artifacts/india-stock-intelligence"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18913
+
+[services.development]
+run = "pnpm --filter @workspace/india-stock-intelligence run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/india-stock-intelligence", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/india-stock-intelligence/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18913"
+BASE_PATH = "/"

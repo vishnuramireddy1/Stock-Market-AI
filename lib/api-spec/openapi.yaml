@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: market
+    description: Market intelligence operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,92 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /market/overview:
+    get:
+      operationId: getMarketOverview
+      tags: [market]
+      summary: Get Indian market overview
+      responses:
+        "200":
+          description: Market overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketOverview"
+  /market/stocks:
+    get:
+      operationId: listStocks
+      tags: [market]
+      summary: Search tracked Indian stocks
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string, default: "" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Stock search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockQuote"
+  /market/stocks/{symbol}:
+    get:
+      operationId: getStock
+      tags: [market]
+      summary: Get a stock intelligence snapshot
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Stock intelligence snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockIntelligence"
+  /research:
+    post:
+      operationId: createResearchReport
+      tags: [market]
+      summary: Generate an AI-assisted research report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResearchRequest"
+      responses:
+        "200":
+          description: Research report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchReport"
+  /chat:
+    post:
+      operationId: chatWithResearchAssistant
+      tags: [market]
+      summary: Ask the market research assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: Assistant response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +121,127 @@ components:
           type: string
       required:
         - status
+    MarketIndex:
+      type: object
+      required: [name, value, change, changePercent, tone]
+      properties:
+        name: { type: string }
+        value: { type: number }
+        change: { type: number }
+        changePercent: { type: number }
+        tone: { type: string, enum: [positive, negative, neutral] }
+    MarketOverview:
+      type: object
+      required: [asOf, indices, breadth, watchlist, headlines]
+      properties:
+        asOf: { type: string }
+        indices:
+          type: array
+          items: { $ref: "#/components/schemas/MarketIndex" }
+        breadth:
+          type: object
+          required: [advances, declines, unchanged]
+          properties:
+            advances: { type: integer }
+            declines: { type: integer }
+            unchanged: { type: integer }
+        watchlist:
+          type: array
+          items: { $ref: "#/components/schemas/StockQuote" }
+        headlines:
+          type: array
+          items: { $ref: "#/components/schemas/NewsHeadline" }
+    StockQuote:
+      type: object
+      required: [symbol, company, exchange, price, change, changePercent, volume, marketCap, sector, tone]
+      properties:
+        symbol: { type: string }
+        company: { type: string }
+        exchange: { type: string, enum: [NSE, BSE] }
+        price: { type: number }
+        change: { type: number }
+        changePercent: { type: number }
+        volume: { type: integer }
+        marketCap: { type: number }
+        sector: { type: string }
+        tone: { type: string, enum: [positive, negative, neutral] }
+    NewsHeadline:
+      type: object
+      required: [title, source, time, sentiment]
+      properties:
+        title: { type: string }
+        source: { type: string }
+        time: { type: string }
+        sentiment: { type: string, enum: [positive, negative, neutral] }
+    TechnicalIndicator:
+      type: object
+      required: [name, value, signal]
+      properties:
+        name: { type: string }
+        value: { type: number }
+        signal: { type: string, enum: [bullish, bearish, neutral] }
+    StockIntelligence:
+      type: object
+      required: [quote, indicators, score, thesis, risks, chart]
+      properties:
+        quote: { $ref: "#/components/schemas/StockQuote" }
+        indicators:
+          type: array
+          items: { $ref: "#/components/schemas/TechnicalIndicator" }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        thesis: { type: string }
+        risks:
+          type: array
+          items: { type: string }
+        chart:
+          type: array
+          items:
+            type: object
+            required: [time, close, volume]
+            properties:
+              time: { type: string }
+              close: { type: number }
+              volume: { type: integer }
+    ResearchRequest:
+      type: object
+      required: [symbol, horizon]
+      properties:
+        symbol: { type: string, minLength: 1 }
+        horizon: { type: string, enum: [swing, medium, long-term] }
+        includeNews: { type: boolean, default: true }
+    ResearchReport:
+      type: object
+      required: [id, symbol, generatedAt, confidence, recommendation, summary, sections, disclaimer]
+      properties:
+        id: { type: string }
+        symbol: { type: string }
+        generatedAt: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        recommendation: { type: string, enum: [constructive, watch, cautious] }
+        summary: { type: string }
+        sections:
+          type: array
+          items:
+            type: object
+            required: [title, content]
+            properties:
+              title: { type: string }
+              content: { type: string }
+        disclaimer: { type: string }
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string, minLength: 1 }
+        context: { type: string }
+    ChatResponse:
+      type: object
+      required: [answer, confidence, sources, disclaimer]
+      properties:
+        answer: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        sources:
+          type: array
+          items: { type: string }
+        disclaimer: { type: string }
 

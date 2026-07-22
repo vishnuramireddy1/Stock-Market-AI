@@ -1,0 +1,1 @@
+- [Market research safety](market-research-safety.md) — AI stock analysis must expose confidence, assumptions, and educational-use risk language rather than certainty.

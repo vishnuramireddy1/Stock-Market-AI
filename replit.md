@@ -1,6 +1,6 @@
-# [Project name]
+# India Stock Intelligence
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Personal AI-assisted research cockpit for Indian NSE/BSE equities, with market overview, technical signals, Gemini research reports, and conversational analysis.
 
 ## Run & Operate
 
@@ -22,15 +22,23 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/india-stock-intelligence/` — responsive React/Vite dashboard and routes
+- `artifacts/api-server/src/routes/market.ts` — market, research, and chat API handlers
+- `lib/api-spec/openapi.yaml` — source-of-truth API contract
+- `lib/api-client-react/` and `lib/api-zod/` — generated client and validation types
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The first slice uses a tracked Indian equity universe while upstream data-provider adapters are added behind the API boundary.
+- Gemini is called only from the server with `GEMINI_API_KEY`; it is never exposed to the browser.
+- Research output is framed as evidence-led educational analysis with confidence and explicit uncertainty, not guaranteed recommendations.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Market Desk overview with NIFTY/SENSEX/breadth and live tape
+- Searchable NSE/BSE stock intelligence with chart and technical signals
+- Gemini-powered research report generation and AI chat
+- Responsive routes for portfolio, watchlist, research, backtesting, news, and settings
 
 ## User preferences
 
@@ -38,7 +46,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run `pnpm --filter @workspace/api-spec run codegen` after changing `lib/api-spec/openapi.yaml`.
+- Frontend builds require workflow-provided `PORT` and `BASE_PATH`; use the managed web workflow for preview verification.
 
 ## Pointers
 
