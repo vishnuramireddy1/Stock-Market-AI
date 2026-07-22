@@ -137,7 +137,28 @@ router.post("/swing/desk", async (req, res) => {
 async function askGemini(message: string, context?: string) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return "Gemini is not configured. This workspace can still show tracked-market context, but AI analysis requires GEMINI_API_KEY.";
-  const prompt = `You are an evidence-led Indian stock research assistant. Never guarantee returns, never issue certainty, state assumptions and risks. ${context ?? ""}\n\nQuestion: ${message}`;
+  const verifiedUniverse = stocks
+    .map((stock) => `${stock.symbol} (${stock.company}, ${stock.sector}, tracked quote ₹${stock.price}, day change ${stock.changePercent}%)`)
+    .join("; ");
+  const prompt = `You are the user's personal Indian swing-trading desk assistant. The user is the boss; answer like a concise, decisive executive briefing, not like a generic refusal or legal disclaimer.
+
+For stock-selection questions, you ARE allowed to provide a ranked shortlist of suggested candidates for research and a preferred candidate when the available evidence supports one. Do not hide behind phrases such as "I cannot provide buy/sell recommendations." Instead say "My suggested shortlist is..." and explain the evidence. Only rank symbols explicitly present in the supplied market context or verified by a data source available to this system. Never introduce SBIN, LT, or any other symbol merely because it sounds plausible. If a requested candidate is not in the available universe, label it "research lead — data unavailable" and do not give it current technical claims, targets, or confidence.
+
+For a 1–60 trading-day swing horizon, structure the answer as:
+1. Executive call: shortlist, ranking, and whether the setup is actionable now or wait.
+2. Evidence: price/technical/fundamental/news or macro factors actually available in context.
+3. Trade plan per candidate: entry trigger or entry zone, invalidation/stop condition, target zone, expected holding window, and risk/reward.
+4. Portfolio fit: suggested risk allocation, correlation/concentration warning, and number of positions.
+5. Catalysts, risks, and what would change the view.
+6. Next action: what the boss should verify before acting.
+
+Verified tracked universe available right now: ${verifiedUniverse}
+
+Never invent live prices, current news, institutional flows, earnings dates, technical indicators, chart patterns, or sources. If live evidence is unavailable, label the item "data required" and give a conditional rule instead of a fabricated fact. You may recommend "wait/no trade" when the setup is weak. Never guarantee returns, claim certainty, or place/execute an order. Keep one short educational-risk note at the end rather than leading with a refusal.
+
+${context ?? ""}
+
+Question: ${message}`;
   let lastError = "unknown upstream error";
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -146,7 +167,7 @@ async function askGemini(message: string, context?: string) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] }),
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(30_000),
       });
       if (response.ok) {
         const payload = (await response.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
@@ -162,7 +183,7 @@ async function askGemini(message: string, context?: string) {
   }
 
   console.warn({ lastError }, "Gemini request failed after retry");
-  return `Gemini is temporarily unavailable (${lastError}). The answer below is a tracked-market fallback; do not treat it as live news or a trade instruction.`;
+  return `Assistant status: Gemini is temporarily unavailable (${lastError}). I cannot produce a current evidence-ranked shortlist until the model responds. Use the tracked-market screen only as background and do not treat it as a live trade plan.`;
 }
 
 async function askGeminiRole(role: string, context: string, question: string) {
