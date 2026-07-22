@@ -91,8 +91,16 @@ router.post("/research", async (req, res) => {
 
 router.post("/chat", async (req, res) => {
   const input = ChatWithResearchAssistantBody.parse(req.body);
-  const answer = await askGemini(input.message, input.context);
-  res.json({ answer, confidence: 0.78, sources: ["Market intelligence workspace", "Tracked NSE universe"], disclaimer });
+  const isSwingRequest = /\b(swing|trade|entry|exit|stop[- ]?loss|target|week|days?)\b/i.test(input.message);
+  const answer = isSwingRequest
+    ? await orchestrateSwingAnswer(input.message, input.context)
+    : await askGemini(input.message, input.context);
+  res.json({
+    answer,
+    confidence: isSwingRequest ? 0.76 : 0.78,
+    sources: ["Quant Assistant", "Swing portfolio agent", "Global politics & macro agent", "Entry/exit setup agent", "Tracked NSE universe"],
+    disclaimer,
+  });
 });
 
 router.post("/swing/desk", async (req, res) => {
@@ -135,8 +143,6 @@ router.post("/swing/desk", async (req, res) => {
 });
 
 async function askGemini(message: string, context?: string) {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) return "Gemini is not configured. This workspace can still show tracked-market context, but AI analysis requires GEMINI_API_KEY.";
   const verifiedUniverse = stocks
     .map((stock) => `${stock.symbol} (${stock.company}, ${stock.sector}, tracked quote ₹${stock.price}, day change ${stock.changePercent}%)`)
     .join("; ");
@@ -159,8 +165,13 @@ Never invent live prices, current news, institutional flows, earnings dates, tec
 ${context ?? ""}
 
 Question: ${message}`;
-  let lastError = "unknown upstream error";
+  return requestGemini(prompt);
+}
 
+async function requestGemini(prompt: string) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return "Gemini is not configured. This workspace can still show tracked-market context, but AI analysis requires GEMINI_API_KEY.";
+  let lastError = "unknown upstream error";
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(key)}`, {
@@ -187,7 +198,62 @@ Question: ${message}`;
 }
 
 async function askGeminiRole(role: string, context: string, question: string) {
-  return askGemini(`${role}\n\n${question}`, context);
+  return requestGemini(`${role}\n\n${context}\n\n${question}`);
+}
+
+async function orchestrateSwingAnswer(message: string, context?: string) {
+  const stockContext = `User request: ${message}\nUser context: ${context || "No additional portfolio context supplied."}`;
+  const [portfolio, macro, setup] = await Promise.all([
+    askGeminiRole(
+      "You are the swing portfolio agent reporting to a lead Quant Assistant. Return only compact portfolio guidance: max risk, position size principle, concentration warning, and whether the idea fits a one-week swing. Do not invent holdings or live data.",
+      stockContext,
+      "Assess the portfolio fit for the user's request in 4 short bullets."
+    ),
+    askGeminiRole(
+      "You are the global politics and macro agent reporting to a lead Quant Assistant. Return only the macro risks that could affect a one-week Indian equity swing through crude, USD/INR, rates, FII flows, or geopolitical risk. Separate verified context from data required. Use 3 short bullets.",
+      stockContext,
+      "Assess the global and macro backdrop relevant to this request."
+    ),
+    askGeminiRole(
+      "You are the entry/exit setup agent reporting to a lead Quant Assistant. Return a compact conditional setup using only verified symbols and supplied prices. Include candidate, entry trigger/zone, stop or invalidation, target, and exit deadline. If exact levels are not supported by data, say data required and give a trigger rule instead. Never invent live indicators.",
+      stockContext,
+      "Create the best available one-week swing setup, or say WAIT if evidence is insufficient."
+    ),
+  ]);
+
+  return requestGemini(
+    `You are the lead Quant Assistant. The user is the boss and wants a short answer, not a research report.
+
+Return exactly these seven lines and nothing else:
+
+CALL: <one stock symbol or WAIT>
+ENTRY: <price/zone or trigger>
+STOP: <price/condition>
+TARGET: <price/zone>
+EXIT BY: <date or number of trading days>
+WHY: <one sentence>
+RISK: <one sentence>
+
+Use only symbols and facts supported by the verified universe below. If exact price levels or a date are not supported, write DATA REQUIRED and provide the conditional rule. Do not list multiple candidates unless the boss asks for a shortlist. Do not add headings, markdown, confidence, sources, or a disclaimer.
+
+VERIFIED UNIVERSE:
+${stocks.map((stock) => `${stock.symbol} (${stock.company}, ${stock.sector}, tracked quote ₹${stock.price}, day change ${stock.changePercent}%)`).join("; ")}
+
+PORTFOLIO AGENT:
+${portfolio}
+
+MACRO AGENT:
+${macro}
+
+ENTRY/EXIT AGENT:
+${setup}
+
+USER REQUEST:
+${message}
+
+USER CONTEXT:
+${context || "No additional portfolio context supplied."}`,
+  );
 }
 
 async function generateGeminiReport(stock: (typeof stocks)[number], horizon: string) {

@@ -41,6 +41,7 @@ Personal-use AI-assisted swing-trading research cockpit for Indian NSE/BSE equit
 - Searchable NSE/BSE stock intelligence with chart and technical signals
 - Gemini-powered research report generation and AI chat
 - Swing Desk with separate portfolio-coach, global-politics/macro, and conditional entry/exit lenses
+- One-person Quant Assistant orchestrates swing roles and returns a compact call/entry/stop/target/exit brief
 - Responsive routes for portfolio, watchlist, research, backtesting, news, and settings
 
 ## User preferences

@@ -18,7 +18,7 @@ export function ChatAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "I'm your Indian market intelligence assistant. Ask me about specific stocks, sectors, or macro trends."
+      content: "Boss, I’m ready. Ask for a one-week swing idea, stock analysis, entry, stop, target, or exit timing."
     }
   ]);
   const [input, setInput] = useState("");
@@ -33,7 +33,7 @@ export function ChatAssistant() {
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
 
     chat.mutate(
-      { data: { message: userMsg, context: "homepage" } },
+      { data: { message: userMsg, context: "one-person swing desk; keep the answer short and actionable" } },
       {
         onSuccess: (res) => {
           setMessages(prev => [
@@ -56,7 +56,7 @@ export function ChatAssistant() {
       <CardHeader className="py-4 border-b border-border bg-card/50">
         <CardTitle className="text-base flex items-center gap-2">
           <Bot className="w-5 h-5 text-primary" />
-          Quant Assistant
+          Quant Assistant · Your trading desk
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
@@ -128,7 +128,7 @@ export function ChatAssistant() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about markets..."
+              placeholder="Ask: swing idea for one week..."
               className="pr-10 bg-background border-border/50 focus-visible:ring-primary/50"
               disabled={chat.isPending}
             />

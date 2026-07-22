@@ -1,29 +1,19 @@
 import { Link, useLocation } from "wouter";
 import { 
-  Activity, 
-  BookOpen, 
   Briefcase, 
-  LineChart, 
   PieChart, 
   Settings, 
-  Newspaper,
   LayoutDashboard,
   Search,
-  Bell
-  ,Target
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getHealthCheckQueryKey, useHealthCheck } from "@workspace/api-client-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Desk", icon: LayoutDashboard },
-  { href: "/stocks", label: "Intel", icon: Activity },
-  { href: "/watchlist", label: "Watchlist", icon: Bell },
   { href: "/portfolio", label: "Portfolio", icon: PieChart },
-  { href: "/research", label: "Research", icon: BookOpen },
-  { href: "/swing-desk", label: "Swing Desk", icon: Target },
-  { href: "/backtesting", label: "Lab", icon: LineChart },
-  { href: "/news", label: "Tape", icon: Newspaper },
+  { href: "/swing-desk", label: "Swing Desk", icon: MessageSquare },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -45,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider max-md:hidden">
             Cockpit
           </div>
-          {NAV_ITEMS.slice(0, 4).map((item) => {
+          {NAV_ITEMS.map((item) => {
             const isActive = location === item.href;
             return (
               <Link key={item.href} href={item.href} className="block">
@@ -64,27 +54,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
 
-          <div className="px-3 mt-8 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider max-md:hidden">
-            Analysis
-          </div>
-          {NAV_ITEMS.slice(4).map((item) => {
-            const isActive = location === item.href;
-            return (
-              <Link key={item.href} href={item.href} className="block">
-                <div
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                  )}
-                >
-                  <item.icon className={cn("w-4 h-4", isActive ? "text-primary" : "text-muted-foreground")} />
-                    <span className="max-md:hidden">{item.label}</span>
-                </div>
-              </Link>
-            );
-          })}
         </div>
 
         <div className="p-4 border-t border-border">

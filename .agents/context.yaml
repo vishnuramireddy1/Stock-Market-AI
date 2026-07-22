@@ -47,7 +47,7 @@ layers:
     root: /artifacts/api-server/src
     boundary: /artifacts/api-server/src/routes
   ai:
-    status: initial-slice
+    status: orchestrated-swing-desk
     model: gemini-flash-latest
     access: server-only
     roles:
@@ -56,6 +56,12 @@ layers:
       - entry-exit-setup
       - research
       - chat
+    routing:
+      swing_requests: parallel_roles_then_compact_lead_answer
+      general_requests: lead_assistant
+    user_output:
+      swing_format: [call, entry, stop, target, exit_by, why, risk]
+      concise: true
   data:
     status: incomplete
     market_source: tracked-universe
@@ -65,6 +71,7 @@ layers:
       - news and filings providers
       - portfolio and transaction persistence
       - market and agent-history cache
+      - real ATR and indicator history for precise levels
   operations:
     status: active
     workflows:
@@ -79,6 +86,7 @@ agenda:
     - add dated global-politics/news sources
     - calculate real technical indicators and risk metrics
     - add contract and integration tests for AI fallback behavior
+    - add a compact response parser/validator for the seven-line swing format
   blocked_by:
     - user choice of market/news data providers
     - user-defined portfolio risk limits
