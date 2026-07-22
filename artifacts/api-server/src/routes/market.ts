@@ -93,6 +93,22 @@ router.post("/research", async (req, res) => {
 
 router.post("/chat", async (req, res) => {
   const input = ChatWithResearchAssistantBody.parse(req.body);
+  const isTimeRequest = /\b(current|present|now|local)\b.*\b(time|date)\b|\bwhat(?:'s| is)\s+the\s+(?:current\s+)?time\b/i.test(input.message);
+  if (isTimeRequest) {
+    const now = new Date();
+    const indiaTime = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "full",
+      timeStyle: "medium",
+    }).format(now);
+    res.json({
+      answer: `Current India time: ${indiaTime} (IST).`,
+      confidence: 1,
+      sources: ["Server clock", "Asia/Kolkata timezone"],
+      disclaimer,
+    });
+    return;
+  }
   const isSwingRequest = /\b(swing|trade|entry|exit|stop[- ]?loss|target|week|days?)\b/i.test(input.message);
   const openTrades = await db
     .select()
@@ -104,10 +120,13 @@ router.post("/chat", async (req, res) => {
   const answer = isSwingRequest
     ? await orchestrateSwingAnswer(input.message, `${input.context || ""}\n${journalContext}`)
     : await askGemini(input.message, `${input.context || ""}\n${journalContext}`);
+  const isProviderFallback = answer.startsWith("Assistant status: Gemini is temporarily unavailable");
   res.json({
     answer,
-    confidence: isSwingRequest ? 0.76 : 0.78,
-    sources: ["Quant Assistant", "Swing portfolio agent", "Global politics & macro agent", "Entry/exit setup agent", "Tracked NSE universe"],
+    confidence: isProviderFallback ? 0 : isSwingRequest ? 0.76 : 0.78,
+    sources: isProviderFallback
+      ? ["Gemini provider status"]
+      : ["Quant Assistant", "Swing portfolio agent", "Global politics & macro agent", "Entry/exit setup agent", "Tracked NSE universe"],
     disclaimer,
   });
 });
