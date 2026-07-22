@@ -26,5 +26,7 @@ export * from './stockIntelligenceChartItem';
 export * from './stockQuote';
 export * from './stockQuoteExchange';
 export * from './stockQuoteTone';
+export * from './swingDeskRequest';
+export * from './swingDeskResponse';
 export * from './technicalIndicator';
 export * from './technicalIndicatorSignal';

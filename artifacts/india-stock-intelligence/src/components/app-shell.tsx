@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Search,
   Bell
+  ,Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getHealthCheckQueryKey, useHealthCheck } from "@workspace/api-client-react";
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/watchlist", label: "Watchlist", icon: Bell },
   { href: "/portfolio", label: "Portfolio", icon: PieChart },
   { href: "/research", label: "Research", icon: BookOpen },
+  { href: "/swing-desk", label: "Swing Desk", icon: Target },
   { href: "/backtesting", label: "Lab", icon: LineChart },
   { href: "/news", label: "Tape", icon: Newspaper },
 ];

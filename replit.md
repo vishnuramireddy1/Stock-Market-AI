@@ -1,6 +1,6 @@
 # India Stock Intelligence
 
-Personal AI-assisted research cockpit for Indian NSE/BSE equities, with market overview, technical signals, Gemini research reports, and conversational analysis.
+Personal-use AI-assisted swing-trading research cockpit for Indian NSE/BSE equities, with market overview, technical signals, Gemini research reports, and conversational analysis.
 
 ## Run & Operate
 
@@ -32,17 +32,20 @@ Personal AI-assisted research cockpit for Indian NSE/BSE equities, with market o
 - The first slice uses a tracked Indian equity universe while upstream data-provider adapters are added behind the API boundary.
 - Gemini is called only from the server with `GEMINI_API_KEY`; it is never exposed to the browser.
 - Research output is framed as evidence-led educational analysis with confidence and explicit uncertainty, not guaranteed recommendations.
+- The primary user workflow is swing trading; new portfolio, macro, and trade-planning features should optimize for roughly 1–60 trading days rather than long-term investing.
+- The product is for personal decision support only and must never place trades or present entry/exit scenarios as certain instructions.
 
 ## Product
 
 - Market Desk overview with NIFTY/SENSEX/breadth and live tape
 - Searchable NSE/BSE stock intelligence with chart and technical signals
 - Gemini-powered research report generation and AI chat
+- Swing Desk with separate portfolio-coach, global-politics/macro, and conditional entry/exit lenses
 - Responsive routes for portfolio, watchlist, research, backtesting, news, and settings
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Personal use only; swing trades are the primary use case.
 
 ## Gotchas
 

@@ -10,6 +10,7 @@ import StockDetail from '@/pages/stock-detail';
 import Watchlist from '@/pages/watchlist';
 import Portfolio from '@/pages/portfolio';
 import Research from '@/pages/research';
+import SwingDesk from '@/pages/swing-desk';
 import Backtesting from '@/pages/backtesting';
 import News from '@/pages/news';
 import Settings from '@/pages/settings';
@@ -27,6 +28,7 @@ function Router() {
         <Route path="/watchlist" component={Watchlist} />
         <Route path="/portfolio" component={Portfolio} />
         <Route path="/research" component={Research} />
+        <Route path="/swing-desk" component={SwingDesk} />
         <Route path="/backtesting" component={Backtesting} />
         <Route path="/news" component={News} />
         <Route path="/settings" component={Settings} />

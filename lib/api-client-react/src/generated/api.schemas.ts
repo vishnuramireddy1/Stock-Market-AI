@@ -182,6 +182,32 @@ export interface ChatResponse {
   disclaimer: string;
 }
 
+export interface SwingDeskRequest {
+  /** @minLength 1 */
+  symbol: string;
+  portfolioContext?: string;
+  /**
+     * @minimum 1
+     * @maximum 60
+     */
+  holdingPeriodDays?: number;
+}
+
+export interface SwingDeskResponse {
+  symbol: string;
+  generatedAt: string;
+  portfolioCoach: string;
+  globalPolitics: string;
+  tradeSetup: string;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  confidence: number;
+  sources: string[];
+  disclaimer: string;
+}
+
 export type ListStocksParams = {
 q?: string;
 /**

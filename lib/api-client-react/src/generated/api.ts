@@ -28,7 +28,9 @@ import type {
   ResearchReport,
   ResearchRequest,
   StockIntelligence,
-  StockQuote
+  StockQuote,
+  SwingDeskRequest,
+  SwingDeskResponse
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -514,5 +516,76 @@ export const useChatWithResearchAssistant = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getChatWithResearchAssistantMutationOptions(options));
+    }
+
+export const getCreateSwingDeskBriefUrl = () => {
+
+
+
+
+  return `/api/swing/desk`
+}
+
+/**
+ * @summary Generate a swing-trading decision brief
+ */
+export const createSwingDeskBrief = async (swingDeskRequest: SwingDeskRequest, options?: RequestInit): Promise<SwingDeskResponse> => {
+
+  return customFetch<SwingDeskResponse>(getCreateSwingDeskBriefUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(swingDeskRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateSwingDeskBriefMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSwingDeskBrief>>, TError,{data: BodyType<SwingDeskRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSwingDeskBrief>>, TError,{data: BodyType<SwingDeskRequest>}, TContext> => {
+
+const mutationKey = ['createSwingDeskBrief'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSwingDeskBrief>>, {data: BodyType<SwingDeskRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSwingDeskBrief(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSwingDeskBriefMutationResult = NonNullable<Awaited<ReturnType<typeof createSwingDeskBrief>>>
+    export type CreateSwingDeskBriefMutationBody = BodyType<SwingDeskRequest>
+    export type CreateSwingDeskBriefMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate a swing-trading decision brief
+ */
+export const useCreateSwingDeskBrief = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSwingDeskBrief>>, TError,{data: BodyType<SwingDeskRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSwingDeskBrief>>,
+        TError,
+        {data: BodyType<SwingDeskRequest>},
+        TContext
+      > => {
+      return useMutation(getCreateSwingDeskBriefMutationOptions(options));
     }
 

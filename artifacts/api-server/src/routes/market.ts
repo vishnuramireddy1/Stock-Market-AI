@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import {
   ChatWithResearchAssistantBody,
   CreateResearchReportBody,
+  CreateSwingDeskBriefBody,
   GetStockParams,
   ListStocksQueryParams,
 } from "@workspace/api-zod";
@@ -94,17 +95,78 @@ router.post("/chat", async (req, res) => {
   res.json({ answer, confidence: 0.78, sources: ["Market intelligence workspace", "Tracked NSE universe"], disclaimer });
 });
 
+router.post("/swing/desk", async (req, res) => {
+  const input = CreateSwingDeskBriefBody.parse(req.body);
+  const stock = stocks.find((item) => item.symbol === input.symbol.toUpperCase());
+  if (!stock) {
+    res.status(404).json({ error: "Stock not found in tracked universe" });
+    return;
+  }
+
+  const context = `Stock: ${stock.company} (${stock.symbol}), price ₹${stock.price}, day change ${stock.changePercent}%, sector ${stock.sector}. Planned holding period: ${input.holdingPeriodDays} trading days. Portfolio context: ${input.portfolioContext || "No portfolio context supplied."}`;
+  const [portfolioCoach, globalPolitics, tradeSetup] = await Promise.all([
+    askGeminiRole(
+      "You are the swing-portfolio coach. Suggest position sizing principles, concentration limits, what portfolio context to review, and how to manage an existing swing position. Do not invent holdings. Do not place orders. Keep the response practical and concise.",
+      context,
+      `For ${stock.symbol}, review the swing portfolio role. Use conditional language and clearly state what information is missing.`
+    ),
+    askGeminiRole(
+      "You are the global politics and macro risk analyst for an Indian swing trader. Explain how current geopolitical developments could affect Indian equities through crude oil, USD/INR, rates, supply chains, risk appetite, and FII flows. Do not claim live events you cannot verify; separate known context from scenarios.",
+      context,
+      `For ${stock.symbol}, provide a global-politics/macro risk lens for the next ${input.holdingPeriodDays} trading days.`
+    ),
+    askGeminiRole(
+      "You are a technical swing setup analyst. Give a conditional educational setup, never a guaranteed trade recommendation. Define a possible entry trigger, invalidation/stop condition, one or two target zones, and exit-management rules. Say when no-trade is preferable. Never present exact levels as live facts unless provided in the context.",
+      context,
+      `For ${stock.symbol}, describe what would confirm entry and what would confirm exit for a swing trade.`
+    ),
+  ]);
+
+  res.json({
+    symbol: stock.symbol,
+    generatedAt: new Date().toISOString(),
+    portfolioCoach,
+    globalPolitics,
+    tradeSetup,
+    confidence: 0.72,
+    sources: ["Market intelligence workspace", "Tracked NSE universe", "User-supplied portfolio context"],
+    disclaimer: `${disclaimer} Swing setups are conditional scenarios, not instructions to buy or sell. Confirm live price, liquidity, news, and your predefined risk before acting.`,
+  });
+});
+
 async function askGemini(message: string, context?: string) {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return "Gemini is not configured. Add GEMINI_API_KEY to enable AI research responses.";
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: `You are an evidence-led Indian stock research assistant. Never guarantee returns, never issue certainty, state assumptions and risks. ${context ?? ""}\n\nQuestion: ${message}` }] }] }),
-  });
-  if (!response.ok) return "The research assistant could not reach Gemini right now. Please retry.";
-  const payload = (await response.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-  return payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") || "No answer was returned.";
+  if (!key) return "Gemini is not configured. This workspace can still show tracked-market context, but AI analysis requires GEMINI_API_KEY.";
+  const prompt = `You are an evidence-led Indian stock research assistant. Never guarantee returns, never issue certainty, state assumptions and risks. ${context ?? ""}\n\nQuestion: ${message}`;
+  let lastError = "unknown upstream error";
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(key)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (response.ok) {
+        const payload = (await response.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+        return payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") || "Gemini returned no analysis. Review the tracked-market data and retry.";
+      }
+      lastError = `gemini-flash-latest: HTTP ${response.status}`;
+    } catch (error) {
+      lastError = `gemini-flash-latest: ${error instanceof Error ? error.message : "network error"}`;
+    }
+    if (attempt === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    }
+  }
+
+  console.warn({ lastError }, "Gemini request failed after retry");
+  return `Gemini is temporarily unavailable (${lastError}). The answer below is a tracked-market fallback; do not treat it as live news or a trade instruction.`;
+}
+
+async function askGeminiRole(role: string, context: string, question: string) {
+  return askGemini(`${role}\n\n${question}`, context);
 }
 
 async function generateGeminiReport(stock: (typeof stocks)[number], horizon: string) {

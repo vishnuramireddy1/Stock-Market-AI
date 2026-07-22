@@ -112,6 +112,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChatResponse"
+  /swing/desk:
+    post:
+      operationId: createSwingDeskBrief
+      tags: [market]
+      summary: Generate a swing-trading decision brief
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwingDeskRequest"
+      responses:
+        "200":
+          description: Swing-trading decision brief
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwingDeskResponse"
 components:
   schemas:
     HealthStatus:
@@ -239,6 +257,27 @@ components:
       required: [answer, confidence, sources, disclaimer]
       properties:
         answer: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        sources:
+          type: array
+          items: { type: string }
+        disclaimer: { type: string }
+    SwingDeskRequest:
+      type: object
+      required: [symbol]
+      properties:
+        symbol: { type: string, minLength: 1 }
+        portfolioContext: { type: string }
+        holdingPeriodDays: { type: integer, minimum: 1, maximum: 60, default: 15 }
+    SwingDeskResponse:
+      type: object
+      required: [symbol, generatedAt, portfolioCoach, globalPolitics, tradeSetup, confidence, sources, disclaimer]
+      properties:
+        symbol: { type: string }
+        generatedAt: { type: string }
+        portfolioCoach: { type: string }
+        globalPolitics: { type: string }
+        tradeSetup: { type: string }
         confidence: { type: number, minimum: 0, maximum: 1 }
         sources:
           type: array

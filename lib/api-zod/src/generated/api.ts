@@ -181,3 +181,35 @@ export const ChatWithResearchAssistantResponse = zod.object({
 })
 
 
+/**
+ * @summary Generate a swing-trading decision brief
+ */
+
+export const createSwingDeskBriefBodyHoldingPeriodDaysDefault = 15;
+export const createSwingDeskBriefBodyHoldingPeriodDaysMax = 60;
+
+
+
+export const CreateSwingDeskBriefBody = zod.object({
+  "symbol": zod.string().min(1),
+  "portfolioContext": zod.string().optional(),
+  "holdingPeriodDays": zod.number().min(1).max(createSwingDeskBriefBodyHoldingPeriodDaysMax).default(createSwingDeskBriefBodyHoldingPeriodDaysDefault)
+})
+
+export const createSwingDeskBriefResponseConfidenceMin = 0;
+export const createSwingDeskBriefResponseConfidenceMax = 1;
+
+
+
+export const CreateSwingDeskBriefResponse = zod.object({
+  "symbol": zod.string(),
+  "generatedAt": zod.string(),
+  "portfolioCoach": zod.string(),
+  "globalPolitics": zod.string(),
+  "tradeSetup": zod.string(),
+  "confidence": zod.number().min(createSwingDeskBriefResponseConfidenceMin).max(createSwingDeskBriefResponseConfidenceMax),
+  "sources": zod.array(zod.string()),
+  "disclaimer": zod.string()
+})
+
+
