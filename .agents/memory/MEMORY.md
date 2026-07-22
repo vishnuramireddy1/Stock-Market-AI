@@ -1,1 +1,2 @@
 - [Market research safety](market-research-safety.md) — AI stock analysis must expose confidence, assumptions, and educational-use risk language rather than certainty.
+- [Repository assistant framework](assistant-framework.md) — AGENTS.md and .agents/context.yaml coordinate cross-layer work and missing-prerequisite requests.

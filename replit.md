@@ -55,3 +55,6 @@ Personal-use AI-assisted swing-trading research cockpit for Indian NSE/BSE equit
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Read `AGENTS.md` before making repository changes; it is the assistant operating contract.
+- `.agents/context.yaml` is the machine-readable system map and current agenda.
+- `.agents/REQUESTS.md` defines how to request missing decisions or prerequisites without asking for secrets in chat.

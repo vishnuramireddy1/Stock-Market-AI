@@ -1,0 +1,91 @@
+framework:
+  name: india-stock-intelligence-assistant
+  version: 1
+  contract: /AGENTS.md
+  request_protocol: /.agents/REQUESTS.md
+  updated: 2026-07-22
+
+product:
+  scope: personal-use Indian NSE/BSE swing-trading research
+  holding_period_days:
+    minimum: 1
+    maximum: 60
+  execution:
+    enabled: false
+    policy: suggestions-only
+  safety:
+    educational_research_only: true
+    require_confidence: true
+    require_sources_or_context: true
+    require_risks: true
+    prohibit_guarantees: true
+
+layers:
+  product:
+    status: active
+    sources:
+      - /replit.md
+  experience:
+    status: active
+    root: /artifacts/india-stock-intelligence/src
+    routes:
+      - /
+      - /stocks
+      - /watchlist
+      - /portfolio
+      - /research
+      - /swing-desk
+      - /backtesting
+      - /news
+      - /settings
+  contract:
+    status: active
+    source: /lib/api-spec/openapi.yaml
+    generated_after_change: true
+  api:
+    status: active
+    root: /artifacts/api-server/src
+    boundary: /artifacts/api-server/src/routes
+  ai:
+    status: initial-slice
+    model: gemini-flash-latest
+    access: server-only
+    roles:
+      - swing-portfolio-coach
+      - global-politics-macro
+      - entry-exit-setup
+      - research
+      - chat
+  data:
+    status: incomplete
+    market_source: tracked-universe
+    persistence: not-yet-complete
+    missing:
+      - live NSE/BSE provider
+      - news and filings providers
+      - portfolio and transaction persistence
+      - market and agent-history cache
+  operations:
+    status: active
+    workflows:
+      - artifacts/api-server: API Server
+      - artifacts/india-stock-intelligence: web
+      - artifacts/mockup-sandbox: Component Preview Server
+
+agenda:
+  next_high_value:
+    - replace tracked market data with provider-backed adapters
+    - persist portfolio holdings and swing trade journal
+    - add dated global-politics/news sources
+    - calculate real technical indicators and risk metrics
+    - add contract and integration tests for AI fallback behavior
+  blocked_by:
+    - user choice of market/news data providers
+    - user-defined portfolio risk limits
+
+change_rules:
+  - Read /AGENTS.md before implementation.
+  - Run codegen after OpenAPI edits.
+  - Restart affected workflows after code or dependency changes.
+  - Never print or commit secrets.
+  - Update this file when a status, capability, or prerequisite changes.
