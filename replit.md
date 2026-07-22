@@ -42,6 +42,8 @@ Personal-use AI-assisted swing-trading research cockpit for Indian NSE/BSE equit
 - Gemini-powered research report generation and AI chat
 - Swing Desk with separate portfolio-coach, global-politics/macro, and conditional entry/exit lenses
 - One-person Quant Assistant orchestrates swing roles and returns a compact call/entry/stop/target/exit brief
+- Persistent Trade Journal stores symbol, quantity, entry/stop/target, planned exit, status, follow-up notes, and closure history in PostgreSQL
+- Quant Assistant receives stored open-trade context during follow-up questions; proactive live alerts require a market-data monitor and notification provider
 - Responsive routes for portfolio, watchlist, research, backtesting, news, and settings
 
 ## User preferences

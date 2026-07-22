@@ -6,6 +6,8 @@ import {
   GetStockParams,
   ListStocksQueryParams,
 } from "@workspace/api-zod";
+import { db, tradeJournalTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -92,9 +94,16 @@ router.post("/research", async (req, res) => {
 router.post("/chat", async (req, res) => {
   const input = ChatWithResearchAssistantBody.parse(req.body);
   const isSwingRequest = /\b(swing|trade|entry|exit|stop[- ]?loss|target|week|days?)\b/i.test(input.message);
+  const openTrades = await db
+    .select()
+    .from(tradeJournalTable)
+    .where(eq(tradeJournalTable.status, "OPEN"));
+  const journalContext = openTrades.length
+    ? `Stored open trades for follow-up reference: ${openTrades.map((trade) => `${trade.symbol} x${trade.quantity} entered ₹${trade.entryPrice}, stop ₹${trade.stopPrice ?? "not set"}, target ₹${trade.targetPrice ?? "not set"}, planned exit ${trade.plannedExitAt?.toISOString() ?? "not set"}, follow-up ${trade.followUpStatus}${trade.followUpNotes ? ` (${trade.followUpNotes})` : ""}`).join("; ")}`
+    : "No open trades are stored in the journal.";
   const answer = isSwingRequest
-    ? await orchestrateSwingAnswer(input.message, input.context)
-    : await askGemini(input.message, input.context);
+    ? await orchestrateSwingAnswer(input.message, `${input.context || ""}\n${journalContext}`)
+    : await askGemini(input.message, `${input.context || ""}\n${journalContext}`);
   res.json({
     answer,
     confidence: isSwingRequest ? 0.76 : 0.78,

@@ -213,3 +213,117 @@ export const CreateSwingDeskBriefResponse = zod.object({
 })
 
 
+/**
+ * @summary List stored personal trades
+ */
+export const ListTradesResponseItem = zod.object({
+  "id": zod.number(),
+  "symbol": zod.string(),
+  "exchange": zod.enum(['NSE', 'BSE']),
+  "quantity": zod.number(),
+  "entryPrice": zod.number(),
+  "stopPrice": zod.number().nullish(),
+  "targetPrice": zod.number().nullish(),
+  "plannedExitAt": zod.coerce.date().nullish(),
+  "status": zod.enum(['OPEN', 'CLOSED', 'CANCELLED']),
+  "exitPrice": zod.number().nullish(),
+  "exitedAt": zod.coerce.date().nullish(),
+  "exitReason": zod.string().nullish(),
+  "followUpStatus": zod.string(),
+  "followUpNotes": zod.string().nullish(),
+  "thesis": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListTradesResponse = zod.array(ListTradesResponseItem)
+
+
+/**
+ * @summary Store a personal trade for follow-up
+ */
+
+export const createTradeBodyExchangeDefault = `NSE`;
+export const createTradeBodyEntryPriceExclusiveMin = 0;
+
+export const createTradeBodyStopPriceExclusiveMin = 0;
+
+export const createTradeBodyTargetPriceExclusiveMin = 0;
+
+
+
+export const CreateTradeBody = zod.object({
+  "symbol": zod.string().min(1),
+  "exchange": zod.enum(['NSE', 'BSE']).default(createTradeBodyExchangeDefault),
+  "quantity": zod.number().min(1),
+  "entryPrice": zod.number().gt(createTradeBodyEntryPriceExclusiveMin),
+  "stopPrice": zod.number().gt(createTradeBodyStopPriceExclusiveMin).optional(),
+  "targetPrice": zod.number().gt(createTradeBodyTargetPriceExclusiveMin).optional(),
+  "plannedExitAt": zod.coerce.date().optional(),
+  "thesis": zod.string().optional()
+})
+
+export const CreateTradeResponse = zod.object({
+  "id": zod.number(),
+  "symbol": zod.string(),
+  "exchange": zod.enum(['NSE', 'BSE']),
+  "quantity": zod.number(),
+  "entryPrice": zod.number(),
+  "stopPrice": zod.number().nullish(),
+  "targetPrice": zod.number().nullish(),
+  "plannedExitAt": zod.coerce.date().nullish(),
+  "status": zod.enum(['OPEN', 'CLOSED', 'CANCELLED']),
+  "exitPrice": zod.number().nullish(),
+  "exitedAt": zod.coerce.date().nullish(),
+  "exitReason": zod.string().nullish(),
+  "followUpStatus": zod.string(),
+  "followUpNotes": zod.string().nullish(),
+  "thesis": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a stored trade or follow-up note
+ */
+
+
+
+export const UpdateTradeParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const updateTradeBodyExitPriceExclusiveMin = 0;
+
+
+
+export const UpdateTradeBody = zod.object({
+  "status": zod.enum(['OPEN', 'CLOSED', 'CANCELLED']).optional(),
+  "exitPrice": zod.number().gt(updateTradeBodyExitPriceExclusiveMin).optional(),
+  "exitedAt": zod.coerce.date().optional(),
+  "exitReason": zod.string().optional(),
+  "followUpStatus": zod.string().optional(),
+  "followUpNotes": zod.string().optional()
+})
+
+export const UpdateTradeResponse = zod.object({
+  "id": zod.number(),
+  "symbol": zod.string(),
+  "exchange": zod.enum(['NSE', 'BSE']),
+  "quantity": zod.number(),
+  "entryPrice": zod.number(),
+  "stopPrice": zod.number().nullish(),
+  "targetPrice": zod.number().nullish(),
+  "plannedExitAt": zod.coerce.date().nullish(),
+  "status": zod.enum(['OPEN', 'CLOSED', 'CANCELLED']),
+  "exitPrice": zod.number().nullish(),
+  "exitedAt": zod.coerce.date().nullish(),
+  "exitReason": zod.string().nullish(),
+  "followUpStatus": zod.string(),
+  "followUpNotes": zod.string().nullish(),
+  "thesis": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+

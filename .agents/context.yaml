@@ -63,13 +63,14 @@ layers:
       swing_format: [call, entry, stop, target, exit_by, why, risk]
       concise: true
   data:
-    status: incomplete
+    status: journal-persistence-added
     market_source: tracked-universe
     persistence: not-yet-complete
     missing:
       - live NSE/BSE provider
       - news and filings providers
-      - portfolio and transaction persistence
+      - live portfolio and transaction persistence
+      - proactive price monitoring and notification delivery
       - market and agent-history cache
       - real ATR and indicator history for precise levels
   operations:
@@ -83,6 +84,7 @@ agenda:
   next_high_value:
     - replace tracked market data with provider-backed adapters
     - persist portfolio holdings and swing trade journal
+    - add live trade monitoring worker and user alerts
     - add dated global-politics/news sources
     - calculate real technical indicators and risk metrics
     - add contract and integration tests for AI fallback behavior

@@ -208,6 +208,86 @@ export interface SwingDeskResponse {
   disclaimer: string;
 }
 
+export type TradeRequestExchange = typeof TradeRequestExchange[keyof typeof TradeRequestExchange];
+
+
+export const TradeRequestExchange = {
+  NSE: 'NSE',
+  BSE: 'BSE',
+} as const;
+
+export interface TradeRequest {
+  /** @minLength 1 */
+  symbol: string;
+  exchange?: TradeRequestExchange;
+  /** @minimum 1 */
+  quantity: number;
+  /** @exclusiveMinimum 0 */
+  entryPrice: number;
+  /** @exclusiveMinimum 0 */
+  stopPrice?: number;
+  /** @exclusiveMinimum 0 */
+  targetPrice?: number;
+  plannedExitAt?: string;
+  thesis?: string;
+}
+
+export type TradeUpdateRequestStatus = typeof TradeUpdateRequestStatus[keyof typeof TradeUpdateRequestStatus];
+
+
+export const TradeUpdateRequestStatus = {
+  OPEN: 'OPEN',
+  CLOSED: 'CLOSED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export interface TradeUpdateRequest {
+  status?: TradeUpdateRequestStatus;
+  /** @exclusiveMinimum 0 */
+  exitPrice?: number;
+  exitedAt?: string;
+  exitReason?: string;
+  followUpStatus?: string;
+  followUpNotes?: string;
+}
+
+export type TradeExchange = typeof TradeExchange[keyof typeof TradeExchange];
+
+
+export const TradeExchange = {
+  NSE: 'NSE',
+  BSE: 'BSE',
+} as const;
+
+export type TradeStatus = typeof TradeStatus[keyof typeof TradeStatus];
+
+
+export const TradeStatus = {
+  OPEN: 'OPEN',
+  CLOSED: 'CLOSED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export interface Trade {
+  id: number;
+  symbol: string;
+  exchange: TradeExchange;
+  quantity: number;
+  entryPrice: number;
+  stopPrice?: number | null;
+  targetPrice?: number | null;
+  plannedExitAt?: string | null;
+  status: TradeStatus;
+  exitPrice?: number | null;
+  exitedAt?: string | null;
+  exitReason?: string | null;
+  followUpStatus: string;
+  followUpNotes?: string | null;
+  thesis?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type ListStocksParams = {
 q?: string;
 /**

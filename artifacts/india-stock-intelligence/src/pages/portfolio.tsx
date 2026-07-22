@@ -1,5 +1,11 @@
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { getListTradesQueryKey, useCreateTrade, useListTrades, useUpdateTrade } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight, Briefcase, IndianRupee } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight, Briefcase, IndianRupee, ClipboardList } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { FormatCurrency, ToneIndicator } from "@/components/formatters";
 
@@ -26,6 +32,35 @@ const PORTFOLIO_MOCK = {
 };
 
 export default function Portfolio() {
+  const queryClient = useQueryClient();
+  const { data: trades = [], isLoading: tradesLoading } = useListTrades();
+  const createTrade = useCreateTrade();
+  const updateTrade = useUpdateTrade();
+  const [form, setForm] = useState({ symbol: "", quantity: "", entryPrice: "", stopPrice: "", targetPrice: "", plannedExitAt: "", thesis: "" });
+  const [note, setNote] = useState<Record<number, string>>({});
+
+  const refreshTrades = () => queryClient.invalidateQueries({ queryKey: getListTradesQueryKey() });
+  const submitTrade = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form.symbol || !form.quantity || !form.entryPrice) return;
+    createTrade.mutate({
+      data: {
+        symbol: form.symbol,
+        quantity: Number(form.quantity),
+        entryPrice: Number(form.entryPrice),
+        stopPrice: form.stopPrice ? Number(form.stopPrice) : undefined,
+        targetPrice: form.targetPrice ? Number(form.targetPrice) : undefined,
+        plannedExitAt: form.plannedExitAt ? new Date(`${form.plannedExitAt}T15:30:00+05:30`).toISOString() : undefined,
+        thesis: form.thesis || undefined,
+      },
+    }, {
+      onSuccess: () => {
+        setForm({ symbol: "", quantity: "", entryPrice: "", stopPrice: "", targetPrice: "", plannedExitAt: "", thesis: "" });
+        refreshTrades();
+      },
+    });
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
@@ -158,6 +193,54 @@ export default function Portfolio() {
               </tbody>
             </table>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><ClipboardList className="w-5 h-5 text-primary" /> Trade Journal & Follow-up</CardTitle>
+          <CardDescription>Store every trade so the Quant Assistant can reference the entry plan and later outcome.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <form onSubmit={submitTrade} className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <Input placeholder="Stock symbol" value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })} />
+            <Input type="number" min="1" placeholder="Quantity" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+            <Input type="number" min="0" step="0.01" placeholder="Entry price" value={form.entryPrice} onChange={(e) => setForm({ ...form, entryPrice: e.target.value })} />
+            <Input type="number" min="0" step="0.01" placeholder="Stop price (optional)" value={form.stopPrice} onChange={(e) => setForm({ ...form, stopPrice: e.target.value })} />
+            <Input type="number" min="0" step="0.01" placeholder="Target price (optional)" value={form.targetPrice} onChange={(e) => setForm({ ...form, targetPrice: e.target.value })} />
+            <Input type="date" value={form.plannedExitAt} onChange={(e) => setForm({ ...form, plannedExitAt: e.target.value })} />
+            <Input className="md:col-span-2" placeholder="Why you took the trade (optional)" value={form.thesis} onChange={(e) => setForm({ ...form, thesis: e.target.value })} />
+            <Button type="submit" disabled={createTrade.isPending}>{createTrade.isPending ? "Saving..." : "Save trade"}</Button>
+          </form>
+
+          {tradesLoading ? <div className="text-sm text-muted-foreground">Loading stored trades...</div> : trades.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">No trades stored yet. Add your first entry above.</div>
+          ) : (
+            <div className="space-y-3">
+              {trades.map((trade) => (
+                <div key={trade.id} className="rounded-lg border border-border p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="font-bold">{trade.symbol} <span className="text-xs font-normal text-muted-foreground">× {trade.quantity}</span></div>
+                      <div className="text-xs text-muted-foreground">Entered ₹{trade.entryPrice.toFixed(2)} · Stop {trade.stopPrice ? `₹${trade.stopPrice.toFixed(2)}` : "not set"} · Target {trade.targetPrice ? `₹${trade.targetPrice.toFixed(2)}` : "not set"}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full ${trade.status === "OPEN" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{trade.status}</span>
+                      {trade.plannedExitAt && <span className="text-xs text-muted-foreground">Exit by {new Date(trade.plannedExitAt).toLocaleDateString("en-IN")}</span>}
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">Follow-up: {trade.followUpStatus}{trade.followUpNotes ? ` — ${trade.followUpNotes}` : ""}</div>
+                  {trade.status === "OPEN" && (
+                    <div className="flex flex-col md:flex-row gap-2">
+                      <Input placeholder="Follow-up note" value={note[trade.id] || ""} onChange={(e) => setNote({ ...note, [trade.id]: e.target.value })} />
+                      <Button variant="outline" disabled={updateTrade.isPending} onClick={() => updateTrade.mutate({ id: trade.id, data: { followUpStatus: "Reviewed by user", followUpNotes: note[trade.id] || undefined } }, { onSuccess: refreshTrades })}>Save note</Button>
+                      <Button variant="outline" disabled={updateTrade.isPending} onClick={() => updateTrade.mutate({ id: trade.id, data: { status: "CLOSED", followUpStatus: "Closed by user", exitReason: "User marked closed" } }, { onSuccess: refreshTrades })}>Close trade</Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

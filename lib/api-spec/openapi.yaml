@@ -130,6 +130,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SwingDeskResponse"
+  /trades:
+    get:
+      operationId: listTrades
+      tags: [trades]
+      summary: List stored personal trades
+      responses:
+        "200":
+          description: Stored trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Trade" }
+    post:
+      operationId: createTrade
+      tags: [trades]
+      summary: Store a personal trade for follow-up
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeRequest"
+      responses:
+        "201":
+          description: Stored trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+  /trades/{id}:
+    patch:
+      operationId: updateTrade
+      tags: [trades]
+      summary: Update a stored trade or follow-up note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeUpdateRequest"
+      responses:
+        "200":
+          description: Updated trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
 components:
   schemas:
     HealthStatus:
@@ -283,4 +336,46 @@ components:
           type: array
           items: { type: string }
         disclaimer: { type: string }
+    TradeRequest:
+      type: object
+      required: [symbol, quantity, entryPrice]
+      properties:
+        symbol: { type: string, minLength: 1 }
+        exchange: { type: string, enum: [NSE, BSE], default: NSE }
+        quantity: { type: integer, minimum: 1 }
+        entryPrice: { type: number, exclusiveMinimum: 0 }
+        stopPrice: { type: number, exclusiveMinimum: 0 }
+        targetPrice: { type: number, exclusiveMinimum: 0 }
+        plannedExitAt: { type: string, format: date-time }
+        thesis: { type: string }
+    TradeUpdateRequest:
+      type: object
+      properties:
+        status: { type: string, enum: [OPEN, CLOSED, CANCELLED] }
+        exitPrice: { type: number, exclusiveMinimum: 0 }
+        exitedAt: { type: string, format: date-time }
+        exitReason: { type: string }
+        followUpStatus: { type: string }
+        followUpNotes: { type: string }
+    Trade:
+      type: object
+      required: [id, symbol, exchange, quantity, entryPrice, status, followUpStatus, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        symbol: { type: string }
+        exchange: { type: string, enum: [NSE, BSE] }
+        quantity: { type: integer }
+        entryPrice: { type: number }
+        stopPrice: { type: number, nullable: true }
+        targetPrice: { type: number, nullable: true }
+        plannedExitAt: { type: string, format: date-time, nullable: true }
+        status: { type: string, enum: [OPEN, CLOSED, CANCELLED] }
+        exitPrice: { type: number, nullable: true }
+        exitedAt: { type: string, format: date-time, nullable: true }
+        exitReason: { type: string, nullable: true }
+        followUpStatus: { type: string }
+        followUpNotes: { type: string, nullable: true }
+        thesis: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
 

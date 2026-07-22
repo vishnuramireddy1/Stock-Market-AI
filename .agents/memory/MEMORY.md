@@ -1,2 +1,3 @@
 - [Market research safety](market-research-safety.md) — AI stock analysis must expose confidence, assumptions, and educational-use risk language rather than certainty.
 - [Repository assistant framework](assistant-framework.md) — AGENTS.md and .agents/context.yaml coordinate cross-layer work and missing-prerequisite requests.
+- [Trade journal boundary](trade-journal-boundary.md) — stored trade plans are the source for follow-up context; live monitoring and alerts remain a separate provider-dependent layer.
